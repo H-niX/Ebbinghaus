@@ -21,15 +21,10 @@ def index():
     """主页"""
     return render_template('index.html')
 
-@app.route('/test')
-def test_form():
-    """测试表单页面"""
-    return send_file('test_form.html')
-
-@app.route('/simple')
-def simple_test():
-    """简单测试页面"""
-    return send_file('simple_test.html')
+@app.route('/guide')
+def guide():
+    """使用指南页面"""
+    return render_template('guide.html')
 
 @app.route('/api/init', methods=['POST'])
 def api_init():

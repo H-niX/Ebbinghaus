@@ -1,0 +1,52 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+share/python-wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# 测试文件和临时文件
+test_*.py
+test_*.xlsx
+quick_test.*
+*_test.*
+tmp_*
+temp_*
+
+# 用户数据文件（实际使用时的Excel文件）
+*.xlsx
+!example_*.xlsx  # 保留示例文件
+
+# 日志文件
+*.log
+
+# 操作系统
+.DS_Store
+Thumbs.db
+
+# 备份文件
+*.backup_*
+*.bak

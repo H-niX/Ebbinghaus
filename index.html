@@ -1,0 +1,1518 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>单词复习系统</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.7.2/font/bootstrap-icons.css" rel="stylesheet">
+    <style>
+        body {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        .main-container {
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            margin: 20px auto;
+            max-width: 900px;
+        }
+        .header {
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            color: white;
+            padding: 20px;
+            border-radius: 15px 15px 0 0;
+            text-align: center;
+        }
+        .card {
+            border: none;
+            border-radius: 10px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+        .btn-primary {
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            border: none;
+            border-radius: 8px;
+            padding: 10px 20px;
+        }
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+        .btn-success {
+            background: #28a745;
+            border-color: #28a745;
+        }
+        .btn-success:hover {
+            background: #218838;
+            border-color: #1e7e34;
+        }
+        .btn-danger {
+            background: #dc3545;
+            border-color: #dc3545;
+        }
+        .btn-danger:hover {
+            background: #c82333;
+            border-color: #bd2130;
+        }
+        .review-item {
+            background: #f8f9fa;
+            border-radius: 10px;
+            padding: 15px;
+            margin: 10px 0;
+            border-left: 4px solid #667eea;
+        }
+        .review-item.familiar {
+            border-left-color: #28a745;
+        }
+        .review-item.reading {
+            border-left-color: #fd7e14;
+        }
+        .overview-card {
+            background: linear-gradient(45deg, #ff9a9e, #fecfef);
+            color: white;
+            border-radius: 10px;
+            padding: 15px;
+            margin: 5px 0;
+        }
+        .nav-tabs {
+            border-bottom: 2px solid #e9ecef;
+        }
+        .nav-tabs .nav-link {
+            border: none;
+            color: #6c757d;
+            padding: 15px 20px;
+            font-weight: 500;
+        }
+        .nav-tabs .nav-link.active {
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            color: white;
+            border-radius: 10px 10px 0 0;
+        }
+        .reading-section {
+            background: linear-gradient(45deg, #ffecd2, #fcb69f);
+            border-radius: 10px;
+            padding: 20px;
+            margin: 20px 0;
+        }
+        .reading-input {
+            background: rgba(255,255,255,0.9);
+            border: 1px solid #fd7e14;
+            border-radius: 8px;
+        }
+        .reading-input:focus {
+            border-color: #fd7e14;
+            box-shadow: 0 0 0 0.2rem rgba(253,126,20,0.25);
+        }
+        .btn-reading {
+            background: linear-gradient(45deg, #fd7e14, #f39c12);
+            border: none;
+            color: white;
+            border-radius: 8px;
+            padding: 10px 20px;
+        }
+        .btn-reading:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(253,126,20,0.3);
+            color: white;
+        }
+        
+        /* 月历样式 */
+        .calendar-container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        .calendar-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+        }
+        .calendar-table th, .calendar-table td {
+            border: 1px solid #e9ecef;
+            text-align: center;
+            vertical-align: top;
+            position: relative;
+        }
+        .calendar-table th {
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            color: white;
+            padding: 12px 8px;
+            font-weight: 600;
+        }
+        .calendar-table td {
+            height: 100px;
+            width: 14.28%;
+            padding: 5px;
+        }
+        .calendar-day {
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+        .calendar-day.other-month {
+            color: #ccc;
+        }
+        .calendar-day.today {
+            background: #667eea;
+            color: white;
+            border-radius: 50%;
+            width: 25px;
+            height: 25px;
+            line-height: 25px;
+            margin: 0 auto 5px;
+        }
+        .review-badge {
+            display: inline-block;
+            background: #28a745;
+            color: white;
+            font-size: 10px;
+            padding: 2px 5px;
+            border-radius: 3px;
+            margin: 1px;
+            cursor: pointer;
+        }
+        .review-badge.new-words {
+            background: #007bff;
+        }
+        .review-badge.familiar-words {
+            background: #28a745;
+        }
+        .review-badge.reading {
+            background: #fd7e14;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="main-container">
+            <!-- 头部 -->
+            <div class="header">
+                <h1><i class="bi bi-journal-bookmark"></i> 单词复习计划系统</h1>
+                <p class="mb-0">基于艾宾浩斯遗忘曲线的智能复习安排</p>
+            </div>
+
+            <!-- 导航标签 -->
+            <ul class="nav nav-tabs" id="mainTabs" role="tablist">
+                <li class="nav-item">
+                    <button class="nav-link active" id="add-tab" data-bs-toggle="tab" data-bs-target="#add" type="button">
+                        <i class="bi bi-plus-circle"></i> 记录学习
+                    </button>
+                </li>
+                <li class="nav-item">
+                    <button class="nav-link" id="plan-tab" data-bs-toggle="tab" data-bs-target="#plan" type="button">
+                        <i class="bi bi-calendar-check"></i> 复习计划
+                    </button>
+                </li>
+                <li class="nav-item">
+                    <button class="nav-link" id="calendar-tab" data-bs-toggle="tab" data-bs-target="#calendar" type="button">
+                        <i class="bi bi-calendar3"></i> 月历视图
+                    </button>
+                </li>
+                <li class="nav-item">
+                    <button class="nav-link" id="overview-tab" data-bs-toggle="tab" data-bs-target="#overview" type="button">
+                        <i class="bi bi-graph-up"></i> 一周概览
+                    </button>
+                </li>
+            </ul>
+
+            <!-- 标签内容 -->
+            <div class="tab-content p-4" id="mainTabContent">
+                <!-- 记录学习 -->
+                <div class="tab-pane fade show active" id="add">
+                    <div class="card">
+                        <div class="card-header">
+                            <h5><i class="bi bi-pencil-square"></i> 记录今日学习</h5>
+                        </div>
+                        <div class="card-body">
+                            <form id="addLearningForm">
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <label class="form-label">单词学习日期</label>
+                                        <input type="date" class="form-control" id="learnDate" required>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="form-label">学习类型</label>
+                                        <select class="form-control" id="wordType">
+                                            <option value="word">单词学习</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                
+                                <div class="row mt-3">
+                                    <div class="col-12">
+                                        <div class="alert alert-info">
+                                            <h6><i class="bi bi-info-circle"></i> 使用说明</h6>
+                                            <ul class="mb-0">
+                                                <li><strong>单词学习</strong>：记录您学习单词的日期</li>
+                                                <li>系统会根据艾宾浩斯遗忘曲线自动安排复习时间</li>
+                                                <li>在月历中可以看到复习安排，显示原始学习日期</li>
+                                            </ul>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div class="d-grid gap-2 mt-4">
+                                    <button type="button" class="btn btn-primary btn-lg" onclick="submitLearningForm()">
+                                        <i class="bi bi-check-circle"></i> 记录单词学习
+                                    </button>
+                                </div>
+                            </form>
+                            
+                            <div id="addResult" class="mt-3"></div>
+                            
+                            <!-- 批量导入按钮 -->
+                            <div class="mt-3">
+                                <button type="button" class="btn btn-info btn-sm" data-bs-toggle="modal" data-bs-target="#batchImportModal">
+                                    <i class="bi bi-upload"></i> 批量导入日期
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- 阅读记录 -->
+                    <div class="card reading-section">
+                        <div class="card-header" style="background: rgba(255,255,255,0.9); border: none;">
+                            <h5><i class="bi bi-book-half"></i> 记录阅读练习</h5>
+                        </div>
+                        <div class="card-body">
+                            <form id="addReadingForm">
+                                <div class="row">
+                                    <div class="col-md-4">
+                                        <label class="form-label">阅读日期</label>
+                                        <input type="date" class="form-control reading-input" id="readingDate" required>
+                                    </div>
+                                    <div class="col-md-8">
+                                        <label class="form-label">阅读内容描述</label>
+                                        <input type="text" class="form-control reading-input" id="readingDescription" placeholder="例如: 2001_text1_一二段" required>
+                                    </div>
+                                </div>
+                                
+                                <div class="row mt-3">
+                                    <div class="col-12">
+                                        <div class="alert" style="background: rgba(255,255,255,0.8); border-color: #fd7e14;">
+                                            <h6><i class="bi bi-lightbulb"></i> 阅读记录说明</h6>
+                                            <ul class="mb-0">
+                                                <li><strong>内容描述示例</strong>：2001_text1_一二段、2001_text1_三四段、2001_text1_全部</li>
+                                                <li><strong>复习安排</strong>：系统会根据艾宾浩斯遗忘曲线安排复习时间</li>
+                                                <li><strong>月历显示</strong>：复习日期会显示具体的阅读内容</li>
+                                            </ul>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div class="d-grid gap-2 mt-4">
+                                    <button type="submit" class="btn btn-reading btn-lg">
+                                        <i class="bi bi-journal-plus"></i> 记录阅读
+                                    </button>
+                                </div>
+                            </form>
+                            
+                            <div id="readingResult" class="mt-3"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 复习计划 -->
+                <div class="tab-pane fade" id="plan">
+                    <div class="card">
+                        <div class="card-header d-flex justify-content-between align-items-center">
+                            <h5><i class="bi bi-calendar-check"></i> 复习计划</h5>
+                            <div>
+                                <input type="date" class="form-control d-inline-block" id="planDate" style="width: auto;">
+                                <button class="btn btn-primary btn-sm" onclick="loadTodayPlan()">
+                                    <i class="bi bi-search"></i> 查看
+                                </button>
+                            </div>
+                        </div>
+                        <div class="card-body">
+                            <div id="todayPlan">
+                                <div class="text-center text-muted">
+                                    <i class="bi bi-calendar"></i>
+                                    <p>选择日期查看复习计划</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 月历视图 -->
+                <div class="tab-pane fade" id="calendar">
+                    <div class="card">
+                        <div class="card-header d-flex justify-content-between align-items-center">
+                            <h5><i class="bi bi-calendar3"></i> 月历复习计划</h5>
+                            <div>
+                                <select class="form-select d-inline-block" id="calendarMonth" style="width: auto;">
+                                    <!-- 月份选项会在JavaScript中生成 -->
+                                </select>
+                                <button class="btn btn-primary btn-sm" onclick="loadMonthlyCalendar()">
+                                    <i class="bi bi-arrow-clockwise"></i> 刷新
+                                </button>
+                            </div>
+                        </div>
+                        <div class="card-body">
+                            <div id="monthlyCalendar">
+                                <div class="text-center">
+                                    <div class="spinner-border text-primary" role="status">
+                                        <span class="visually-hidden">加载中...</span>
+                                    </div>
+                                    <p class="mt-2">加载月历中...</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 一周概览 -->
+                <div class="tab-pane fade" id="overview">
+                    <div class="card">
+                        <div class="card-header d-flex justify-content-between align-items-center">
+                            <h5><i class="bi bi-graph-up"></i> 一周复习概览</h5>
+                            <button class="btn btn-primary btn-sm" onclick="loadWeeklyOverview()">
+                                <i class="bi bi-arrow-clockwise"></i> 刷新
+                            </button>
+                        </div>
+                        <div class="card-body">
+                            <div id="weeklyOverview">
+                                <div class="text-center">
+                                    <div class="spinner-border text-primary" role="status">
+                                        <span class="visually-hidden">加载中...</span>
+                                    </div>
+                                    <p class="mt-2">加载一周概览中...</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast 通知 -->
+    <div class="toast-container position-fixed bottom-0 end-0 p-3">
+        <div id="toast" class="toast" role="alert">
+            <div class="toast-header">
+                <i id="toastIcon" class="bi bi-info-circle text-info"></i>
+                <strong class="ms-2">系统提示</strong>
+                <button type="button" class="btn-close" data-bs-dismiss="toast"></button>
+            </div>
+            <div class="toast-body" id="toastBody">
+                消息内容
+            </div>
+        </div>
+    </div>
+
+    <!-- 同日记录处理模态框 -->
+    <div class="modal fade" id="mergeConfirmModal" tabindex="-1" aria-labelledby="mergeConfirmModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="mergeConfirmModalLabel">
+                        <i class="bi bi-exclamation-triangle-fill text-warning"></i> 发现同日学习记录
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="关闭"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="alert alert-warning">
+                        <strong>检测到您已在该日期记录过学习！</strong>
+                    </div>
+                    
+                    <div id="existingRecordsInfo" class="mb-3">
+                        <!-- 现有记录信息将在这里显示 -->
+                    </div>
+                    
+                    <div class="mb-3">
+                        <h6>请选择处理方式：</h6>
+                        <div class="row g-2">
+                            <div class="col-md-4">
+                                <div class="d-grid">
+                                    <button type="button" class="btn btn-success" onclick="handleMergeChoice('add')">
+                                        <i class="bi bi-plus-circle"></i>
+                                        <div>累加</div>
+                                        <small>新增到已有记录</small>
+                                    </button>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="d-grid">
+                                    <button type="button" class="btn btn-warning" onclick="handleMergeChoice('replace')">
+                                        <i class="bi bi-arrow-repeat"></i>
+                                        <div>替换</div>
+                                        <small>覆盖现有记录</small>
+                                    </button>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="d-grid">
+                                    <button type="button" class="btn btn-secondary" onclick="handleMergeChoice('cancel')">
+                                        <i class="bi bi-x-circle"></i>
+                                        <div>取消</div>
+                                        <small>不做任何操作</small>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="alert alert-info">
+                        <h6><i class="bi bi-info-circle"></i> 说明：</h6>
+                        <ul class="mb-0">
+                            <li><strong>累加</strong>：将新数量加到现有记录上（推荐）</li>
+                            <li><strong>替换</strong>：删除原记录，使用新数据</li>
+                            <li><strong>取消</strong>：保持原有记录不变</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // 页面初始化
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('页面初始化开始');
+            
+            const today = new Date().toISOString().split('T')[0];
+            
+            // 安全地设置日期值
+            const learnDateEl = document.getElementById('learnDate');
+            if (learnDateEl) {
+                learnDateEl.value = today;
+                console.log('设置学习日期为:', today);
+            }
+            
+            const planDateEl = document.getElementById('planDate');
+            if (planDateEl) planDateEl.value = today;
+            
+            const readingDateEl = document.getElementById('readingDate');
+            if (readingDateEl) readingDateEl.value = today;
+            
+            // 绑定表单提交事件
+            const addLearningForm = document.getElementById('addLearningForm');
+            if (addLearningForm) {
+                console.log('找到学习表单，绑定事件');
+                addLearningForm.addEventListener('submit', handleLearningSubmit);
+            } else {
+                console.error('未找到学习表单元素');
+            }
+            
+            // 初始化月份选择器
+            initMonthSelector();
+            
+            // 初始化系统
+            initSystem();
+            
+            // 加载今日计划
+            loadTodayPlan();
+            
+            // 加载一周概览
+            loadWeeklyOverview();
+            
+            // 加载月历
+            loadMonthlyCalendar();
+        });
+
+        // 显示通知
+        function showToast(message, type = 'info') {
+            const toast = document.getElementById('toast');
+            const toastIcon = document.getElementById('toastIcon');
+            const toastBody = document.getElementById('toastBody');
+            
+            const icons = {
+                'success': 'bi-check-circle text-success',
+                'error': 'bi-x-circle text-danger',
+                'warning': 'bi-exclamation-triangle text-warning',
+                'info': 'bi-info-circle text-info'
+            };
+            
+            toastIcon.className = `bi ${icons[type] || icons['info']}`;
+            toastBody.textContent = message;
+            
+            const bsToast = new bootstrap.Toast(toast);
+            bsToast.show();
+        }
+
+        // 初始化系统
+        async function initSystem() {
+            console.log('开始初始化系统...');
+            try {
+                const response = await fetch('/api/init', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ filename: 'vocabulary.xlsx' })
+                });
+                const data = await response.json();
+                console.log('初始化响应:', data);
+                if (!data.success) {
+                    showToast('系统初始化失败: ' + data.error, 'error');
+                } else {
+                    console.log('系统初始化成功');
+                }
+            } catch (error) {
+                console.error('系统初始化失败:', error);
+                showToast('系统初始化失败: ' + error.message, 'error');
+            }
+        }
+
+        // 同日记录处理相关变量
+        let pendingLearningData = null;
+        let pendingReadingData = null;
+        
+        // 检查是否存在同日学习记录
+        async function checkExistingLearningRecord(date) {
+            try {
+                const response = await fetch('/api/check_existing_learning', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ date: date })
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    return {
+                        hasExisting: data.has_existing,
+                        existingRecords: data.existing_records || []
+                    };
+                } else {
+                    console.error('检查现有记录失败:', data.error);
+                    return { hasExisting: false, existingRecords: [] };
+                }
+            } catch (error) {
+                console.error('检查现有记录失败:', error);
+                return { hasExisting: false, existingRecords: [] };
+            }
+        }
+        
+        // 检查是否存在同日阅读记录
+        async function checkExistingReadingRecord(date) {
+            try {
+                const response = await fetch('/api/check_existing_reading', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ date: date })
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    return {
+                        hasExisting: data.has_existing,
+                        existingRecords: data.existing_records || []
+                    };
+                } else {
+                    console.error('检查现有阅读记录失败:', data.error);
+                    return { hasExisting: false, existingRecords: [] };
+                }
+            } catch (error) {
+                console.error('检查现有阅读记录失败:', error);
+                return { hasExisting: false, existingRecords: [] };
+            }
+        }
+        
+        // 显示同日记录处理对话框
+        function showMergeConfirmModal(existingRecords, newData, isReading = false) {
+            if (isReading) {
+                pendingReadingData = newData;
+                pendingLearningData = null;
+            } else {
+                pendingLearningData = newData;
+                pendingReadingData = null;
+            }
+            
+            // 构建现有记录信息
+            let recordsHtml = '<div class="card"><div class="card-header"><h6>现有记录：</h6></div><div class="card-body">';
+            
+            existingRecords.forEach(record => {
+                if (isReading) {
+                    const unitNames = {
+                        '段落': '段',
+                        '文章': '篇',
+                        '长篇': '篇'
+                    };
+                    recordsHtml += `
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <span><strong>${record.reading_type}阅读</strong></span>
+                            <span class="badge bg-warning">${record.count} ${unitNames[record.reading_type] || '个'}</span>
+                        </div>
+                    `;
+                } else {
+                    recordsHtml += `
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <span><strong>${record.word_type}</strong></span>
+                            <span class="badge bg-primary">${record.word_count} 个</span>
+                        </div>
+                    `;
+                }
+            });
+            
+            recordsHtml += '</div></div>';
+            recordsHtml += '<div class="mt-3"><h6>准备添加：</h6>';
+            recordsHtml += '<div class="row">';
+            
+            if (isReading) {
+                const typeNames = {
+                    'paragraph': '段落',
+                    'article': '文章',
+                    'passage': '长篇'
+                };
+                const unitNames = {
+                    'paragraph': '段',
+                    'article': '篇',
+                    'passage': '篇'
+                };
+                recordsHtml += `
+                    <div class="col-12">
+                        <div class="alert alert-light mb-1">${typeNames[newData.reading_type]}: <strong>${newData.count}</strong> ${unitNames[newData.reading_type]}</div>
+                    </div>
+                `;
+            } else {
+                if (newData.new_word_count > 0) {
+                    recordsHtml += `
+                        <div class="col-md-6">
+                            <div class="alert alert-light mb-1">新学单词: <strong>${newData.new_word_count}</strong> 个</div>
+                        </div>
+                    `;
+                }
+                
+                if (newData.marked_familiar_count > 0) {
+                    recordsHtml += `
+                        <div class="col-md-6">
+                            <div class="alert alert-light mb-1">标熟单词: <strong>${newData.marked_familiar_count}</strong> 个</div>
+                        </div>
+                    `;
+                }
+            }
+            
+            recordsHtml += '</div></div>';
+            
+            document.getElementById('existingRecordsInfo').innerHTML = recordsHtml;
+            
+            const modal = new bootstrap.Modal(document.getElementById('mergeConfirmModal'));
+            modal.show();
+        }
+        
+        // 处理合并选择
+        async function handleMergeChoice(strategy) {
+            const isReadingOperation = !!pendingReadingData;
+            const dataToProcess = pendingReadingData || pendingLearningData;
+            
+            if (!dataToProcess) {
+                console.error('没有待处理的数据');
+                return;
+            }
+            
+            // 关闭模态框
+            const modal = bootstrap.Modal.getInstance(document.getElementById('mergeConfirmModal'));
+            modal.hide();
+            
+            if (strategy === 'cancel') {
+                showToast('操作已取消', 'info');
+                pendingLearningData = null;
+                pendingReadingData = null;
+                return;
+            }
+            
+            // 添加合并策略到数据中
+            const requestData = { ...dataToProcess, merge_strategy: strategy };
+            const apiUrl = isReadingOperation ? '/api/add_reading' : '/api/add_learning';
+            
+            try {
+                const response = await fetch(apiUrl, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(requestData)
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    let toastType = strategy === 'replace' ? 'warning' : 'success';
+                    showToast(data.message, toastType);
+                    
+                    // 显示结果
+                    if (isReadingOperation) {
+                        const readingResult = document.getElementById('readingResult');
+                        readingResult.innerHTML = `
+                            <div class="alert alert-success" style="background: rgba(255,255,255,0.9); border-color: #28a745;">
+                                <h6>✅ ${data.message}</h6>
+                                <p class="mb-0">系统将安排复习计划</p>
+                            </div>
+                        `;
+                        // 清空表单（保留日期和类型）
+                        document.getElementById('readingCount').value = '';
+                    } else {
+                        const addResult = document.getElementById('addResult');
+                        addResult.innerHTML = `
+                            <div class="alert alert-success">
+                                <h6>✅ ${data.message}</h6>
+                                <p class="mb-0">系统将根据艾宾浩斯遗忘曲线自动安排复习计划</p>
+                            </div>
+                        `;
+                        // 清空表单（保留日期）
+                        document.getElementById('newWordCount').value = '0';
+                        document.getElementById('familiarWordCount').value = '0';
+                    }
+                    
+                    // 刷新其他页面数据
+                    loadTodayPlan();
+                    loadWeeklyOverview();
+                } else {
+                    showToast('记录失败: ' + data.error, 'error');
+                }
+            } catch (error) {
+                showToast('记录失败: ' + error.message, 'error');
+            }
+            
+            pendingLearningData = null;
+            pendingReadingData = null;
+        }
+
+        // 简单的提交函数
+        function submitLearningForm() {
+            console.log('submitLearningForm被调用');
+            
+            const learnDate = document.getElementById('learnDate').value;
+            const wordType = document.getElementById('wordType').value;
+            
+            console.log('数据:', learnDate, wordType);
+            
+            if (!learnDate) {
+                alert('请选择学习日期');
+                return;
+            }
+            
+            // 发送请求
+            fetch('/api/add_learning', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    date: learnDate,
+                    type: wordType
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                console.log('响应:', data);
+                if (data.success) {
+                    alert('成功: ' + data.message);
+                    // 显示结果
+                    const addResult = document.getElementById('addResult');
+                    addResult.innerHTML = `
+                        <div class="alert alert-success">
+                            <h6>✅ ${data.message}</h6>
+                            <p class="mb-0">系统将根据艾宾浩斯遗忘曲线自动安排复习计划</p>
+                        </div>
+                    `;
+                    loadMonthlyCalendar();
+                } else {
+                    alert('失败: ' + data.error);
+                }
+            })
+            .catch(error => {
+                console.error('错误:', error);
+                alert('请求失败: ' + error.message);
+            });
+        }
+
+        // 处理学习表单提交
+        async function handleLearningSubmit(e) {
+            e.preventDefault();
+            console.log('表单提交处理函数被调用');
+            
+            const learnDate = document.getElementById('learnDate').value;
+            const wordType = document.getElementById('wordType').value;
+            
+            console.log('表单数据:', { learnDate, wordType });
+            
+            if (!learnDate) {
+                showToast('请选择学习日期', 'warning');
+                return;
+            }
+            
+            // 显示加载状态
+            const submitBtn = e.target.querySelector('button[type="submit"]');
+            const originalText = submitBtn.innerHTML;
+            submitBtn.innerHTML = '<i class="bi bi-hourglass-split"></i> 提交中...';
+            submitBtn.disabled = true;
+            
+            try {
+                console.log('开始发送请求...');
+                const response = await fetch('/api/add_learning', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        date: learnDate,
+                        type: wordType
+                    })
+                });
+                
+                console.log('响应状态:', response.status);
+                const data = await response.json();
+                console.log('响应数据:', data);
+                
+                if (data.success) {
+                    showToast(data.message, 'success');
+                    
+                    // 显示结果
+                    const addResult = document.getElementById('addResult');
+                    addResult.innerHTML = `
+                        <div class="alert alert-success">
+                            <h6>✅ ${data.message}</h6>
+                            <p class="mb-0">系统将根据艾宾浩斯遗忘曲线自动安排复习计划</p>
+                        </div>
+                    `;
+                    
+                    // 刷新其他页面数据
+                    loadTodayPlan();
+                    loadWeeklyOverview();
+                    loadMonthlyCalendar();
+                } else {
+                    showToast('记录失败: ' + data.error, 'error');
+                    const addResult = document.getElementById('addResult');
+                    addResult.innerHTML = `
+                        <div class="alert alert-danger">
+                            <h6>❌ 记录失败</h6>
+                            <p class="mb-0">${data.error}</p>
+                        </div>
+                    `;
+                }
+            } catch (error) {
+                console.error('请求失败:', error);
+                showToast('记录失败: ' + error.message, 'error');
+                const addResult = document.getElementById('addResult');
+                addResult.innerHTML = `
+                    <div class="alert alert-danger">
+                        <h6>❌ 请求失败</h6>
+                        <p class="mb-0">${error.message}</p>
+                    </div>
+                `;
+            } finally {
+                // 恢复按钮状态
+                submitBtn.innerHTML = originalText;
+                submitBtn.disabled = false;
+            }
+        }
+
+        // 添加阅读记录
+        document.getElementById('addReadingForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const readingDate = document.getElementById('readingDate').value;
+            const readingDescription = document.getElementById('readingDescription').value.trim();
+            
+            if (!readingDescription) {
+                showToast('请输入阅读内容描述', 'warning');
+                return;
+            }
+            
+            // 直接添加阅读记录
+            try {
+                const response = await fetch('/api/add_reading', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        date: readingDate,
+                        description: readingDescription
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    showToast(data.message, 'success');
+                    
+                    // 显示结果
+                    const readingResult = document.getElementById('readingResult');
+                    readingResult.innerHTML = `
+                        <div class="alert alert-success" style="background: rgba(255,255,255,0.9); border-color: #28a745;">
+                            <h6>✅ ${data.message}</h6>
+                            <p class="mb-0">系统将安排复习计划</p>
+                        </div>
+                    `;
+                    
+                    // 清空表单内容描述
+                    document.getElementById('readingDescription').value = '';
+                    
+                    // 刷新其他页面数据
+                    loadTodayPlan();
+                    loadWeeklyOverview();
+                    loadMonthlyCalendar();
+                } else {
+                    showToast('记录失败: ' + data.error, 'error');
+                }
+            } catch (error) {
+                showToast('记录失败: ' + error.message, 'error');
+            }
+        });
+
+        // 加载今日计划
+        async function loadTodayPlan() {
+            const targetDate = document.getElementById('planDate').value;
+            
+            try {
+                const response = await fetch(`/api/today_plan?date=${targetDate}`);
+                const data = await response.json();
+                
+                if (data.success) {
+                    const plan = data.plan;
+                    const planDiv = document.getElementById('todayPlan');
+                    
+                    if (plan.reviews.length === 0) {
+                        planDiv.innerHTML = `
+                            <div class="text-center text-success">
+                                <i class="bi bi-check-circle display-1"></i>
+                                <h4>🎉 ${plan.date_display} 无复习任务！</h4>
+                                <p class="text-muted">${plan.date}</p>
+                            </div>
+                        `;
+                    } else {
+                        let html = `<h5>📅 ${plan.date_display} (${plan.date}) 的复习计划</h5>`;
+                        
+                        plan.reviews.forEach(review => {
+                            let typeClass = '';
+                            let typeIcon = '';
+                            
+                            if (review.word_type === '新学单词') {
+                                typeClass = '';
+                                typeIcon = 'bi-book';
+                            } else if (review.word_type === '标熟单词') {
+                                typeClass = 'familiar';
+                                typeIcon = 'bi-bookmark-check';
+                            } else if (review.item_type === 'reading') {
+                                typeClass = 'reading';
+                                typeIcon = 'bi-book-half';
+                            }
+                            
+                            // 简化显示：只显示阅读复习信息和时间
+                            if (review.item_type === 'reading') {
+                                // 阅读类型显示数量信息
+                                const unitMap = {
+                                    '段落': '段',
+                                    '文章': '篇', 
+                                    '长篇': '篇'
+                                };
+                                const unit = unitMap[review.reading_type.replace('阅读', '')] || '个';
+                                const countText = review.word_count + ' ' + unit;
+                                
+                                html += `
+                                    <div class="review-item ${typeClass}">
+                                        <div class="d-flex justify-content-between align-items-center">
+                                            <div>
+                                                <h6><i class="bi ${typeIcon}"></i> ${review.reading_type} ${countText}</h6>
+                                                <small class="text-muted">复习时间: ${plan.date_display} (${plan.date})</small>
+                                            </div>
+                                            <div>
+                                                <button class="btn btn-success btn-sm me-2" onclick="completeReview('${plan.date}', '${review.original_date}', '${review.reading_type}', true)">
+                                                    <i class="bi bi-check"></i> 记得
+                                                </button>
+                                                <button class="btn btn-danger btn-sm" onclick="completeReview('${plan.date}', '${review.original_date}', '${review.reading_type}', false)">
+                                                    <i class="bi bi-x"></i> 忘了
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                `;
+                            } else {
+                                // 单词复习只显示时间，不显示详细信息
+                                html += `
+                                    <div class="review-item ${typeClass}">
+                                        <div class="d-flex justify-content-between align-items-center">
+                                            <div>
+                                                <h6><i class="bi ${typeIcon}"></i> ${review.word_type} 复习</h6>
+                                                <small class="text-muted">复习时间: ${plan.date_display} (${plan.date})</small>
+                                            </div>
+                                            <div>
+                                                <button class="btn btn-success btn-sm me-2" onclick="completeReview('${plan.date}', '${review.original_date}', '${review.word_type}', true)">
+                                                    <i class="bi bi-check"></i> 记得
+                                                </button>
+                                                <button class="btn btn-danger btn-sm" onclick="completeReview('${plan.date}', '${review.original_date}', '${review.word_type}', false)">
+                                                    <i class="bi bi-x"></i> 忘了
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                `;
+                            }
+                        });
+                        
+                        planDiv.innerHTML = html;
+                    }
+                } else {
+                    showToast('加载计划失败: ' + data.error, 'error');
+                }
+            } catch (error) {
+                showToast('加载计划失败: ' + error.message, 'error');
+            }
+        }
+
+        // 完成复习
+        async function completeReview(reviewDate, originalDate, wordType, success) {
+            try {
+                const response = await fetch('/api/complete_review', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        review_date: reviewDate,
+                        original_date: originalDate,
+                        word_type: wordType,
+                        success: success
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    showToast(data.message, 'success');
+                    loadTodayPlan(); // 重新加载计划
+                    loadWeeklyOverview(); // 更新概览
+                } else {
+                    showToast('更新失败: ' + data.error, 'error');
+                }
+            } catch (error) {
+                showToast('更新失败: ' + error.message, 'error');
+            }
+        }
+
+        // 加载一周概览
+        async function loadWeeklyOverview() {
+            try {
+                const response = await fetch('/api/weekly_overview');
+                const data = await response.json();
+                
+                if (data.success) {
+                    const overview = data.overview;
+                    const overviewDiv = document.getElementById('weeklyOverview');
+                    
+                    if (Object.keys(overview).length === 0) {
+                        overviewDiv.innerHTML = `
+                            <div class="text-center text-muted">
+                                <i class="bi bi-calendar-x display-1"></i>
+                                <h5>未来一周暂无复习任务</h5>
+                                <p>继续加油学习新单词吧！</p>
+                            </div>
+                        `;
+                    } else {
+                        let html = '<h5>📊 未来复习概览</h5>';
+                        
+                        Object.entries(overview).forEach(([date, info]) => {
+                            html += `
+                                <div class="overview-card">
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <div>
+                                            <h6>${info.display} (${date})</h6>
+                                            <small>共 ${info.total_reviews} 项复习任务</small>
+                                        </div>
+                                        <div class="text-end">
+                                            ${info.new_word_reviews > 0 ? `<div><i class="bi bi-book"></i> 新学: ${info.new_word_reviews}</div>` : ''}
+                                            ${info.familiar_word_reviews > 0 ? `<div><i class="bi bi-bookmark-check"></i> 标熟: ${info.familiar_word_reviews}</div>` : ''}
+                                            ${info.reading_reviews > 0 ? `<div><i class="bi bi-book-half"></i> 阅读: ${info.reading_reviews}</div>` : ''}
+                                        </div>
+                                    </div>
+                                </div>
+                            `;
+                        });
+                        
+                        overviewDiv.innerHTML = html;
+                    }
+                } else {
+                    showToast('加载概览失败: ' + data.error, 'error');
+                }
+            } catch (error) {
+                showToast('加载概览失败: ' + error.message, 'error');
+            }
+        }
+        
+        // 初始化月份选择器
+        function initMonthSelector() {
+            const currentDate = new Date();
+            const currentYear = currentDate.getFullYear();
+            const currentMonth = currentDate.getMonth() + 1;
+            
+            const monthSelector = document.getElementById('calendarMonth');
+            monthSelector.innerHTML = '';
+            
+            // 生成前后6个月的选项
+            for (let i = -6; i <= 6; i++) {
+                const date = new Date(currentYear, currentMonth - 1 + i, 1);
+                const year = date.getFullYear();
+                const month = date.getMonth() + 1;
+                const option = document.createElement('option');
+                option.value = `${year}-${month}`;
+                option.textContent = `${year}年${month}月`;
+                if (i === 0) option.selected = true;
+                monthSelector.appendChild(option);
+            }
+            
+            // 添加月份变更事件监听器
+            monthSelector.addEventListener('change', loadMonthlyCalendar);
+        }
+        
+        // 加载月历
+        async function loadMonthlyCalendar() {
+            try {
+                const monthSelector = document.getElementById('calendarMonth');
+                const [year, month] = monthSelector.value.split('-').map(Number);
+                
+                const response = await fetch(`/api/monthly_calendar?year=${year}&month=${month}`);
+                const data = await response.json();
+                
+                if (data.success) {
+                    const calendar = data.calendar;
+                    const calendarDiv = document.getElementById('monthlyCalendar');
+                    
+                    let html = `
+                        <div class="calendar-container">
+                            <h5 class="text-center mb-3">${calendar.month_name}</h5>
+                            <table class="calendar-table">
+                                <thead>
+                                    <tr>
+                    `;
+                    
+                    // 添加星期标题
+                    calendar.weekday_names.forEach(day => {
+                        html += `<th>${day}</th>`;
+                    });
+                    html += `</tr></thead><tbody>`;
+                    
+                    // 添加日期行
+                    const today = new Date();
+                    const todayStr = `${today.getFullYear()}-${(today.getMonth() + 1).toString().padStart(2, '0')}-${today.getDate().toString().padStart(2, '0')}`;
+                    
+                    calendar.weeks.forEach(week => {
+                        html += '<tr>';
+                        week.forEach(day => {
+                            if (day === 0) {
+                                html += '<td class="other-month"></td>';
+                            } else {
+                                const dayStr = `${calendar.year}-${calendar.month.toString().padStart(2, '0')}-${day.toString().padStart(2, '0')}`;
+                                const isToday = dayStr === todayStr;
+                                const reviews = calendar.daily_reviews[day] || null;
+                                
+                                html += '<td>';
+                                html += `<div class="calendar-day ${isToday ? 'today' : ''}">${day}</div>`;
+                                
+                                if (reviews && reviews.items) {
+                                    reviews.items.forEach(item => {
+                                        html += `<div style="font-size: 12px; line-height: 1.3; margin: 2px 0; padding: 2px; background: rgba(0,123,255,0.1); border-radius: 3px; text-align: left;">${item}</div>`;
+                                    });
+                                }
+                                
+                                html += '</td>';
+                            }
+                        });
+                        html += '</tr>';
+                    });
+                    
+                    html += '</tbody></table></div>';
+                    calendarDiv.innerHTML = html;
+                } else {
+                    showToast('加载月历失败: ' + data.error, 'error');
+                }
+            } catch (error) {
+                showToast('加载月历失败: ' + error.message, 'error');
+            }
+        }
+
+        // 批量导入功能
+        document.addEventListener('DOMContentLoaded', function() {
+            const previewBtn = document.getElementById('previewDatesBtn');
+            const importBtn = document.getElementById('importDatesBtn');
+            const dateTextArea = document.getElementById('dateTextArea');
+            const dateFile = document.getElementById('dateFile');
+            
+            let validDates = [];
+            let errors = [];
+
+            // 预览数据按钮事件
+            previewBtn.addEventListener('click', function() {
+                const activeTab = document.querySelector('#import-method-tabs .nav-link.active').id;
+                
+                if (activeTab === 'text-input-tab') {
+                    previewTextInput();
+                } else {
+                    previewFileInput();
+                }
+            });
+
+            // 确认导入按钮事件
+            importBtn.addEventListener('click', function() {
+                if (validDates.length === 0) {
+                    showToast('没有有效的日期可以导入', 'warning');
+                    return;
+                }
+                
+                importDates();
+            });
+
+            // 文本输入预览
+            function previewTextInput() {
+                const text = dateTextArea.value.trim();
+                if (!text) {
+                    showToast('请输入日期数据', 'warning');
+                    return;
+                }
+                
+                const lines = text.split('\n').map(line => line.trim()).filter(line => line);
+                parseDates(lines);
+            }
+
+            // 文件输入预览
+            function previewFileInput() {
+                const file = dateFile.files[0];
+                if (!file) {
+                    showToast('请选择文件', 'warning');
+                    return;
+                }
+
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    const content = e.target.result;
+                    const lines = content.split('\n').map(line => line.trim()).filter(line => line);
+                    parseDates(lines);
+                };
+                reader.readAsText(file);
+            }
+
+            // 解析日期
+            function parseDates(lines) {
+                validDates = [];
+                errors = [];
+                
+                const standardDateRegex = /^\d{4}-\d{2}-\d{2}$/;  // 2025-08-01
+                const compactDateRegex = /^\d{8}$/;               // 20250801
+                
+                lines.forEach((line, index) => {
+                    // 尝试从行中提取日期
+                    let dateStr = line;
+                    
+                    // 如果是CSV格式，取第一列
+                    if (line.includes(',')) {
+                        dateStr = line.split(',')[0].trim();
+                    }
+                    
+                    let finalDateStr = '';
+                    
+                    // 检查标准格式 YYYY-MM-DD
+                    if (standardDateRegex.test(dateStr)) {
+                        finalDateStr = dateStr;
+                    }
+                    // 检查紧凑格式 YYYYMMDD
+                    else if (compactDateRegex.test(dateStr)) {
+                        // 转换 20250801 -> 2025-08-01
+                        const year = dateStr.substring(0, 4);
+                        const month = dateStr.substring(4, 6);
+                        const day = dateStr.substring(6, 8);
+                        finalDateStr = `${year}-${month}-${day}`;
+                    }
+                    
+                    // 验证日期有效性
+                    if (finalDateStr) {
+                        const date = new Date(finalDateStr);
+                        if (!isNaN(date.getTime())) {
+                            validDates.push(finalDateStr);
+                        } else {
+                            errors.push(`第${index + 1}行: ${line} (日期无效)`);
+                        }
+                    } else {
+                        errors.push(`第${index + 1}行: ${line} (格式不正确)`);
+                    }
+                });
+
+                // 去重
+                validDates = [...new Set(validDates)];
+                
+                // 显示预览
+                showPreview();
+            }
+
+            // 显示预览
+            function showPreview() {
+                const previewDiv = document.getElementById('datePreview');
+                const previewContent = document.getElementById('previewContent');
+                const dateCount = document.getElementById('dateCount');
+                const errorsDiv = document.getElementById('importErrors');
+                const errorList = document.getElementById('errorList');
+                
+                // 显示有效日期
+                if (validDates.length > 0) {
+                    previewContent.innerHTML = validDates.sort().map(date => 
+                        `<span class="badge bg-primary me-1 mb-1">${date}</span>`
+                    ).join('');
+                    dateCount.textContent = validDates.length;
+                    previewDiv.style.display = 'block';
+                    importBtn.style.display = 'inline-block';
+                } else {
+                    previewDiv.style.display = 'none';
+                    importBtn.style.display = 'none';
+                }
+                
+                // 显示错误
+                if (errors.length > 0) {
+                    errorList.innerHTML = errors.map(error => 
+                        `<div class="small">${error}</div>`
+                    ).join('');
+                    errorsDiv.style.display = 'block';
+                } else {
+                    errorsDiv.style.display = 'none';
+                }
+            }
+
+            // 执行导入
+            async function importDates() {
+                const importBtn = document.getElementById('importDatesBtn');
+                importBtn.disabled = true;
+                importBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>导入中...';
+                
+                try {
+                    let successCount = 0;
+                    let failCount = 0;
+                    
+                    for (const date of validDates) {
+                        try {
+                            const response = await fetch('/api/add_learning', {
+                                method: 'POST',
+                                headers: {
+                                    'Content-Type': 'application/json',
+                                },
+                                body: JSON.stringify({
+                                    date: date,
+                                    type: 'word'
+                                })
+                            });
+                            
+                            if (response.ok) {
+                                successCount++;
+                            } else {
+                                failCount++;
+                            }
+                        } catch (error) {
+                            console.error('导入日期失败:', date, error);
+                            failCount++;
+                        }
+                    }
+                    
+                    // 显示结果
+                    if (successCount > 0) {
+                        showToast(`成功导入 ${successCount} 个日期${failCount > 0 ? `，${failCount} 个失败` : ''}`, 'success');
+                        
+                        // 刷新日历
+                        loadMonthlyCalendar();
+                        
+                        // 关闭对话框
+                        const modal = bootstrap.Modal.getInstance(document.getElementById('batchImportModal'));
+                        modal.hide();
+                        
+                        // 重置表单
+                        resetImportForm();
+                    } else {
+                        showToast('所有日期导入失败', 'error');
+                    }
+                    
+                } catch (error) {
+                    console.error('批量导入出错:', error);
+                    showToast('导入过程出错: ' + error.message, 'error');
+                } finally {
+                    importBtn.disabled = false;
+                    importBtn.innerHTML = '确认导入';
+                }
+            }
+
+            // 重置表单
+            function resetImportForm() {
+                dateTextArea.value = '';
+                dateFile.value = '';
+                document.getElementById('datePreview').style.display = 'none';
+                document.getElementById('importErrors').style.display = 'none';
+                document.getElementById('importDatesBtn').style.display = 'none';
+                validDates = [];
+                errors = [];
+            }
+
+            // 模态框关闭时重置
+            document.getElementById('batchImportModal').addEventListener('hidden.bs.modal', function() {
+                resetImportForm();
+            });
+        });
+    </script>
+
+    <!-- 批量导入模态对话框 -->
+    <div class="modal fade" id="batchImportModal" tabindex="-1" aria-labelledby="batchImportModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="batchImportModalLabel">
+                        <i class="bi bi-upload"></i> 批量导入学习日期
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <!-- 导入方式选择 -->
+                    <ul class="nav nav-pills mb-3" id="import-method-tabs" role="tablist">
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link active" id="text-input-tab" data-bs-toggle="pill" data-bs-target="#text-input" type="button" role="tab">
+                                <i class="bi bi-keyboard"></i> 直接输入
+                            </button>
+                        </li>
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link" id="file-upload-tab" data-bs-toggle="pill" data-bs-target="#file-upload" type="button" role="tab">
+                                <i class="bi bi-file-earmark-arrow-up"></i> 文件上传
+                            </button>
+                        </li>
+                    </ul>
+
+                    <div class="tab-content" id="import-method-content">
+                        <!-- 直接输入 -->
+                        <div class="tab-pane fade show active" id="text-input" role="tabpanel">
+                            <div class="mb-3">
+                                <label for="dateTextArea" class="form-label">请输入日期列表（每行一个日期）</label>
+                                <textarea class="form-control" id="dateTextArea" rows="8" placeholder="例如：&#10;20250712&#10;20250715&#10;20250720&#10;20250801"></textarea>
+                                <div class="form-text">
+                                    支持格式：YYYYMMDD（如 20250712）或 YYYY-MM-DD（如 2025-07-12）
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 文件上传 -->
+                        <div class="tab-pane fade" id="file-upload" role="tabpanel">
+                            <div class="mb-3">
+                                <label for="dateFile" class="form-label">选择包含日期的文件</label>
+                                <input class="form-control" type="file" id="dateFile" accept=".txt,.csv,.xlsx,.xls">
+                                <div class="form-text">
+                                    支持 .txt, .csv, .xlsx 格式文件。日期格式：YYYYMMDD 或 YYYY-MM-DD
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 预览区域 -->
+                    <div id="datePreview" class="mt-3" style="display: none;">
+                        <h6>数据预览：</h6>
+                        <div id="previewContent" class="border rounded p-3 bg-light" style="max-height: 200px; overflow-y: auto;">
+                        </div>
+                        <div class="mt-2">
+                            <small class="text-muted">将导入 <span id="dateCount">0</span> 个日期</small>
+                        </div>
+                    </div>
+
+                    <!-- 错误信息 -->
+                    <div id="importErrors" class="mt-3" style="display: none;">
+                        <div class="alert alert-warning">
+                            <h6>以下日期格式有误，将被忽略：</h6>
+                            <div id="errorList"></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
+                    <button type="button" class="btn btn-primary" id="previewDatesBtn">预览数据</button>
+                    <button type="button" class="btn btn-success" id="importDatesBtn" style="display: none;">确认导入</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</body>
+</html>
